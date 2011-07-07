@@ -723,6 +723,7 @@ sub _EncodeLOB {
         my $Filename = shift;
 
         my $ContentEncoding = 'none';
+        my $note_args;
 
         #get the max attachment length from RT
         my $MaxSize = RT->Config->Get('MaxAttachmentSize');
@@ -753,7 +754,13 @@ sub _EncodeLOB {
 
                 # truncate the attachment to that length.
                 $Body = substr( $Body, 0, $MaxSize );
-
+                $note_args = {
+                    NoteType => 'SystemWarning',
+                    Content  => (
+                        ( defined $Filename ? $Filename : 'content' )
+                        . ' was truncated.'
+                    ),
+                };
             }
 
             # elsif we're supposed to drop large attachments on the floor,
@@ -763,8 +770,18 @@ sub _EncodeLOB {
                 $RT::Logger->info( "$self: Dropped an attachment of size "
                                    . length($Body));
                 $RT::Logger->info( "It started: " . substr( $Body, 0, 60 ) );
+
+                $note_args = {
+                    NoteType => 'SystemWarning',
+                    Content  => (
+                        ( defined $Filename ? $Filename : 'content' )
+                        . ' was dropped.'
+                    ),
+                };
+
                 $Filename .= ".txt" if $Filename;
-                return ("none", "Large attachment dropped", "plain/text", $Filename );
+                return ( "none", "Large attachment dropped",
+                    "plain/text", $Filename, $note_args );
             }
         }
 
@@ -781,7 +798,7 @@ sub _EncodeLOB {
         }
 
 
-        return ($ContentEncoding, $Body, $MIMEType, $Filename );
+        return ($ContentEncoding, $Body, $MIMEType, $Filename, $note_args );
 
 }
 

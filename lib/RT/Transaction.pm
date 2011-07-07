@@ -673,8 +673,8 @@ sub BriefDescription {
             )
         );
     }
-    elsif ( $type =~ /SystemError/ ) {
-        return $self->loc("System error");
+    elsif ( $type =~ /^System(\w+)/ ) {
+        return $self->loc('System ' . lc $1);
     }
     elsif ( $type =~ /Forward Transaction/ ) {
         return $self->loc( "Forwarded Transaction #[_1] to [_2]",

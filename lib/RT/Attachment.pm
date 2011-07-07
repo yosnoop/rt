@@ -194,11 +194,9 @@ sub Create {
     else {
 
         my ($encoding, $type);
-        ($encoding, $content, $type, $Filename) = $self->_EncodeLOB(
-            $Attachment->bodyhandle->as_string,
-            $Attachment->mime_type,
-            $Filename
-        );
+        ( $encoding, $content, $type, $Filename, my $note_args ) =
+          $self->_EncodeLOB( $Attachment->bodyhandle->as_string,
+            $Attachment->mime_type, $Filename );
 
         my $id = $self->SUPER::Create(
             TransactionId   => $args{'TransactionId'},
@@ -212,7 +210,18 @@ sub Create {
             MessageId       => $MessageId,
         );
 
-        unless ($id) {
+        if ($id) {
+            if ($note_args) {
+                my $ticket = $self->TransactionObj->TicketObj;
+                if ( $ticket && $ticket->isa('RT::Ticket') ) {
+                    $ticket->_RecordNote(%$note_args);
+                }
+                else {
+                    $RT::Logger->error("only ticket supports RecordNote");
+                }
+            }
+        }
+        else {
             $RT::Logger->crit("Attachment insert failed: ". $RT::Handle->dbh->errstr);
         }
         return $id;
@@ -229,10 +238,28 @@ sub Import {
     my $self = shift;
     my %args = ( ContentEncoding => 'none', @_ );
 
-    ( $args{'ContentEncoding'}, $args{'Content'} ) =
-        $self->_EncodeLOB( $args{'Content'}, $args{'MimeType'} );
+    ( $args{'ContentEncoding'}, $args{'Content'}, undef, undef, my $note_args )
+      = $self->_EncodeLOB( $args{'Content'}, $args{'MimeType'},
+        $args{'Filename'} );
 
-    return ( $self->SUPER::Create(%args) );
+    my $id = $self->SUPER::Create(%args);
+    if ($id) {
+        if ($note_args) {
+            my $ticket = $self->TransactionObj->TicketObj;
+            if ( $ticket && $ticket->isa('RT::Ticket') ) {
+                $ticket->_RecordNote(%$note_args);
+            }
+            else {
+                $RT::Logger->error("only ticket supports RecordNote");
+            }
+        }
+    }
+    else {
+        $RT::Logger->crit(
+            "Attachment import failed: " . $RT::Handle->dbh->errstr );
+    }
+
+    return $id;
 }
 
 =head2 TransactionObj
