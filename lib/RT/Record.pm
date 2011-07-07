@@ -781,7 +781,7 @@ sub _EncodeLOB {
                     ),
                 };
 
-                $Filename .= ".txt" if $Filename;
+                $Filename .= ".txt" if $Filename && $Filename !~ /\.txt$/;
                 return ( "none", "Large attachment dropped",
                     "plain/text", $Filename, $note_args );
             }
