@@ -755,14 +755,15 @@ sub _EncodeLOB {
                 $RT::Logger->warn( "$self: Truncated an attachment of size "
                                    . length($Body));
                 # truncate the attachment to that length.
-                $Body = substr( $Body, 0, $MaxSize );
+                my $note = ( defined $Filename ? $Filename : 'content' )
+                  . ' was truncated, sha1 is ' . Digest::SHA::sha1_hex($Body)
+                  . '.';
+
                 $note_args = {
                     NoteType => 'SystemWarning',
-                    Content  => (
-                        ( defined $Filename ? $Filename : 'content' )
-                        . ' was truncated.'
-                    ),
+                    Content => $note,
                 };
+                $Body = substr( $Body, 0, $MaxSize );
             }
 
             # elsif we're supposed to drop large attachments on the floor,
@@ -773,12 +774,14 @@ sub _EncodeLOB {
                                    . length($Body));
                 $RT::Logger->warn( "It started: " . substr( $Body, 0, 60 ) );
 
+                my $note =
+                    ( defined $Filename ? $Filename : 'content' )
+                  . ' was dropped, sha1 is '
+                  . Digest::SHA::sha1_hex($Body) . '.';
+
                 $note_args = {
                     NoteType => 'SystemWarning',
-                    Content  => (
-                        ( defined $Filename ? $Filename : 'content' )
-                        . ' was dropped.'
-                    ),
+                    Content => $note,
                 };
 
                 $Filename .= ".txt" if $Filename && $Filename !~ /\.txt$/;
