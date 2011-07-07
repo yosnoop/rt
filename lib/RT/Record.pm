@@ -752,6 +752,8 @@ sub _EncodeLOB {
             # if we're supposed to truncate large attachments
             if (RT->Config->Get('TruncateLongAttachments')) {
 
+                $RT::Logger->warn( "$self: Truncated an attachment of size "
+                                   . length($Body));
                 # truncate the attachment to that length.
                 $Body = substr( $Body, 0, $MaxSize );
                 $note_args = {
@@ -767,9 +769,9 @@ sub _EncodeLOB {
             elsif (RT->Config->Get('DropLongAttachments')) {
 
                 # drop the attachment on the floor
-                $RT::Logger->info( "$self: Dropped an attachment of size "
+                $RT::Logger->warn( "$self: Dropped an attachment of size "
                                    . length($Body));
-                $RT::Logger->info( "It started: " . substr( $Body, 0, 60 ) );
+                $RT::Logger->warn( "It started: " . substr( $Body, 0, 60 ) );
 
                 $note_args = {
                     NoteType => 'SystemWarning',
