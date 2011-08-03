@@ -176,6 +176,28 @@ sub goto_create_ticket {
     return 1;
 }
 
+sub goto_update_ticket {
+    my $self = shift;
+    my %args = @_;
+    my ($ticket, $action) = @args{'ticket', 'action'};
+    for ('ticket', 'action') {
+        die "'$_' parameter required for goto_update_ticket" unless $args{$_};
+    }
+
+    my $id;
+    if ( ref $ticket ) {
+        $id = $ticket->id;
+    } elsif ( $ticket =~ /^\d+$/ ) {
+        $id = $ticket;
+    } else {
+        die "not yet implemented";
+    }
+
+    $self->get($self->rt_base_url . 'Ticket/Update.html?id='.$id.'&Action='.$action);
+
+    return 1;
+}
+
 sub get_warnings {
     my $self = shift;
     local $Test::Builder::Level = $Test::Builder::Level + 1;

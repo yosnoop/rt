@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use RT::Test tests => 15;
+use RT::Test tests => 16;
 
 my $ticket = RT::Test->create_ticket(
     Subject => 'test bulk update',
@@ -33,5 +33,12 @@ for (qw/Estimated Worked Left/) {
     $m->select("Time${_}-TimeUnits" => 'hours');
     $m->click('AddMoreAttach');
     $m->form_name('TicketCreate');
-    is ($m->value("Time${_}-TimeUnits"), 'hours', 'time units stayed to "hours" after the page was refreshed');
+    is($m->value("Time${_}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
 }
+
+$m->goto_update_ticket(ticket => $ticket, action => 'Respond');
+$m->form_name('TicketUpdate');
+$m->select("UpdateTimeWorked-TimeUnits" => 'hours');
+$m->click('AddMoreAttach');
+$m->form_name('TicketUpdate');
+is($m->value("UpdateTimeWorked-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
