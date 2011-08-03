@@ -46,7 +46,7 @@
 %#
 %# END BPS TAGGED BLOCK }}}
 <input name="<% $ValueName %>" value="<% $Default || '' %>" size="5" />
-<& /Elements/SelectTimeUnits, Name => $UnitName &>
+<& /Elements/SelectTimeUnits, Name => $UnitName, InputUnits => $InputUnits &>
 <%ARGS>
 $Default    => ''
 $Name       => ''
