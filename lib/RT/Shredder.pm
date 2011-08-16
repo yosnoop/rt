@@ -416,7 +416,10 @@ sub PutObject
     }
 
     my $str = $obj->_AsString;
-    return ($self->{'cache'}->{ $str } ||= { State => ON_STACK, Object => $obj } );
+    return ($self->{'cache'}->{ $str } ||= {
+        State  => RT::Shredder::Constants::ON_STACK,
+        Object => $obj
+    } );
 }
 
 =head4 GetObject, GetState, GetRecord( String => ''| Object => '' )
@@ -538,7 +541,7 @@ sub WipeoutAll
     my $self = $_[0];
 
     while ( my ($k, $v) = each %{ $self->{'cache'} } ) {
-        next if $v->{'State'} & (WIPED | IN_WIPING);
+        next if $v->{'State'} & (RT::Shredder::Constants::WIPED | RT::Shredder::Constants::IN_WIPING);
         $self->Wipeout( Object => $v->{'Object'} );
     }
 }
@@ -570,9 +573,9 @@ sub _Wipeout
 
     my $record = $args{'CacheRecord'};
     $record = $self->PutObject( Object => $args{'Object'} ) unless $record;
-    return if $record->{'State'} & (WIPED | IN_WIPING);
+    return if $record->{'State'} & (RT::Shredder::Constants::WIPED | RT::Shredder::Constants::IN_WIPING);
 
-    $record->{'State'} |= IN_WIPING;
+    $record->{'State'} |= RT::Shredder::Constants::IN_WIPING;
     my $object = $record->{'Object'};
 
     $self->DumpObject( Object => $object, State => 'before any action' );
@@ -583,25 +586,25 @@ sub _Wipeout
 
     my $deps = $object->Dependencies( Shredder => $self );
     $deps->List(
-        WithFlags => DEPENDS_ON | VARIABLE,
+        WithFlags => RT::Shredder::Constants::DEPENDS_ON | RT::Shredder::Constants::VARIABLE,
         Callback  => sub { $self->ApplyResolvers( Dependency => $_[0] ) },
     );
     $self->DumpObject( Object => $object, State => 'after resolvers' );
 
     $deps->List(
-        WithFlags    => DEPENDS_ON,
-        WithoutFlags => WIPE_AFTER | VARIABLE,
+        WithFlags    => RT::Shredder::Constants::DEPENDS_ON,
+        WithoutFlags => RT::Shredder::Constants::WIPE_AFTER | RT::Shredder::Constants::VARIABLE,
         Callback     => sub { $self->_Wipeout( Object => $_[0]->TargetObject ) },
     );
     $self->DumpObject( Object => $object, State => 'after wiping dependencies' );
 
     $object->__Wipeout;
-    $record->{'State'} |= WIPED; delete $record->{'Object'};
+    $record->{'State'} |= RT::Shredder::Constants::WIPED; delete $record->{'Object'};
     $self->DumpObject( Object => $object, State => 'after wipeout' );
 
     $deps->List(
-        WithFlags => DEPENDS_ON | WIPE_AFTER,
-        WithoutFlags => VARIABLE,
+        WithFlags => RT::Shredder::Constants::DEPENDS_ON | RT::Shredder::Constants::WIPE_AFTER,
+        WithoutFlags => RT::Shredder::Constants::VARIABLE,
         Callback => sub { $self->_Wipeout( Object => $_[0]->TargetObject ) },
     );
     $self->DumpObject( Object => $object, State => 'after late dependencies' );
@@ -615,7 +618,7 @@ sub ValidateRelations
     my %args = ( @_ );
 
     foreach my $record( values %{ $self->{'cache'} } ) {
-        next if( $record->{'State'} & VALID );
+        next if( $record->{'State'} & RT::Shredder::Constants::VALID );
         $record->{'Object'}->ValidateRelations( Shredder => $self );
     }
 }

@@ -92,7 +92,7 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related Queue #". $self->id ." object";
     }
 
@@ -103,7 +103,7 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related ScripCondition #". $self->id ." object";
     }
 # Action
@@ -113,13 +113,13 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related ScripAction #". $self->id ." object";
     }
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => RELATES,
+            Flags => RT::Shredder::Constants::RELATES,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );

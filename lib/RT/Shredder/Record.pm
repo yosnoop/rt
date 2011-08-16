@@ -100,7 +100,7 @@ sub Dependencies
     my $self = shift;
     my %args = (
             Shredder => undef,
-            Flags => DEPENDS_ON,
+            Flags => RT::Shredder::Constants::DEPENDS_ON,
             @_,
            );
 
@@ -109,10 +109,10 @@ sub Dependencies
     }
 
     my $deps = RT::Shredder::Dependencies->new();
-    if( $args{'Flags'} & DEPENDS_ON ) {
+    if( $args{'Flags'} & RT::Shredder::Constants::DEPENDS_ON ) {
         $self->__DependsOn( %args, Dependencies => $deps );
     }
-    if( $args{'Flags'} & RELATES ) {
+    if( $args{'Flags'} & RT::Shredder::Constants::RELATES ) {
         $self->__Relates( %args, Dependencies => $deps );
     }
     return $deps;
@@ -163,7 +163,7 @@ sub __DependsOn
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => DEPENDS_ON,
+            Flags => RT::Shredder::Constants::DEPENDS_ON,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );
@@ -190,7 +190,7 @@ sub __Relates
         } else {
             my $rec = $args{'Shredder'}->GetRecord( Object => $self );
             $self = $rec->{'Object'};
-            $rec->{'State'} |= INVALID;
+            $rec->{'State'} |= RT::Shredder::Constants::INVALID;
             push @{ $rec->{'Description'} },
                 "Have no related User(Creator) #". $self->Creator ." object";
         }
@@ -205,7 +205,7 @@ sub __Relates
         } else {
             my $rec = $args{'Shredder'}->GetRecord( Object => $self );
             $self = $rec->{'Object'};
-            $rec->{'State'} |= INVALID;
+            $rec->{'State'} |= RT::Shredder::Constants::INVALID;
             push @{ $rec->{'Description'} },
                 "Have no related User(LastUpdatedBy) #". $self->LastUpdatedBy ." object";
         }
@@ -213,7 +213,7 @@ sub __Relates
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => RELATES,
+            Flags => RT::Shredder::Constants::RELATES,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );
@@ -221,7 +221,8 @@ sub __Relates
     # cause of this $self->SUPER::__Relates should be called last
     # in overridden subs
     my $rec = $args{'Shredder'}->GetRecord( Object => $self );
-    $rec->{'State'} |= VALID unless( $rec->{'State'} & INVALID );
+    $rec->{'State'} |= RT::Shredder::Constants::VALID
+        unless $rec->{'State'} & RT::Shredder::Constants::INVALID;
 
     return;
 }
@@ -249,11 +250,11 @@ sub ValidateRelations
     }
 
     my $rec = $args{'Shredder'}->PutObject( Object => $self );
-    return if( $rec->{'State'} & VALID );
+    return if( $rec->{'State'} & RT::Shredder::Constants::VALID );
     $self = $rec->{'Object'};
 
-    $self->_ValidateRelations( %args, Flags => RELATES );
-    $rec->{'State'} |= VALID unless( $rec->{'State'} & INVALID );
+    $self->_ValidateRelations( %args, Flags => RT::Shredder::Constants::RELATES );
+    $rec->{'State'} |= RT::Shredder::Constants::VALID unless( $rec->{'State'} & RT::Shredder::Constants::INVALID );
 
     return;
 }

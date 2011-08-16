@@ -77,7 +77,7 @@ sub __DependsOn
         $objs->Load( $self->Instance );
         $deps->_PushDependency(
                 BaseObject => $self,
-                Flags => DEPENDS_ON | WIPE_AFTER,
+                Flags => RT::Shredder::Constants::DEPENDS_ON | RT::Shredder::Constants::WIPE_AFTER,
                 TargetObject => $objs,
                 Shredder => $args{'Shredder'}
             );
@@ -86,7 +86,7 @@ sub __DependsOn
 # Principal
     $deps->_PushDependency(
             BaseObject => $self,
-            Flags => DEPENDS_ON | WIPE_AFTER,
+            Flags => RT::Shredder::Constants::DEPENDS_ON | RT::Shredder::Constants::WIPE_AFTER,
             TargetObject => $self->PrincipalObj,
             Shredder => $args{'Shredder'}
         );
@@ -121,7 +121,7 @@ sub __DependsOn
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => DEPENDS_ON,
+            Flags => RT::Shredder::Constants::DEPENDS_ON,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );
@@ -148,7 +148,7 @@ sub __Relates
         } else {
             my $rec = $args{'Shredder'}->GetRecord( Object => $self );
             $self = $rec->{'Object'};
-            $rec->{'State'} |= INVALID;
+            $rec->{'State'} |= RT::Shredder::Constants::INVALID;
             $rec->{'Description'} = "ACLEguvivalence group have no related User #". $self->Instance ." object.";
         }
     }
@@ -160,13 +160,13 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related Principal #". $self->id ." object.";
     }
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => RELATES,
+            Flags => RT::Shredder::Constants::RELATES,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );

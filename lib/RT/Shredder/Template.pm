@@ -76,7 +76,7 @@ sub __DependsOn
 
     $deps->_PushDependencies(
         BaseObject => $self,
-        Flags => DEPENDS_ON,
+        Flags => RT::Shredder::Constants::DEPENDS_ON,
         TargetObjects => $list,
         Shredder => $args{'Shredder'},
     );
@@ -102,7 +102,7 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related Queue #". $self->id ." object";
     }
 
@@ -110,7 +110,7 @@ sub __Relates
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => RELATES,
+            Flags => RT::Shredder::Constants::RELATES,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );

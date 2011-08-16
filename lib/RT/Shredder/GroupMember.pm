@@ -79,7 +79,7 @@ sub __DependsOn
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => DEPENDS_ON,
+            Flags => RT::Shredder::Constants::DEPENDS_ON,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );
@@ -95,7 +95,7 @@ sub __DependsOn
     # we don't delete group, so we have to fix Ticket and Group
     $deps->_PushDependencies(
                 BaseObject => $self,
-                Flags => DEPENDS_ON | VARIABLE,
+                Flags => RT::Shredder::Constants::DEPENDS_ON | RT::Shredder::Constants::VARIABLE,
                 TargetObjects => $group,
                 Shredder => $args{'Shredder'}
         );
@@ -105,7 +105,8 @@ sub __DependsOn
             Code => sub {
                 my %args = (@_);
                 my $group = $args{'TargetObject'};
-                return if $args{'Shredder'}->GetState( Object => $group ) & (WIPED|IN_WIPING);
+                return if $args{'Shredder'}->GetState( Object => $group )
+                    & (RT::Shredder::Constants::WIPED|RT::Shredder::Constants::IN_WIPING);
                 return unless ($group->Type || '') eq 'Owner';
                 return unless ($group->Domain || '') eq 'RT::Ticket-Role';
 
@@ -157,7 +158,7 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related Principal #". $self->MemberId ." object.";
     }
 
@@ -167,13 +168,13 @@ sub __Relates
     } else {
         my $rec = $args{'Shredder'}->GetRecord( Object => $self );
         $self = $rec->{'Object'};
-        $rec->{'State'} |= INVALID;
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
         $rec->{'Description'} = "Have no related Principal #". $self->GroupId ." object.";
     }
 
     $deps->_PushDependencies(
             BaseObject => $self,
-            Flags => RELATES,
+            Flags => RT::Shredder::Constants::RELATES,
             TargetObjects => $list,
             Shredder => $args{'Shredder'}
         );

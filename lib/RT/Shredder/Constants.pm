@@ -51,8 +51,6 @@ package RT::Shredder::Constants;
 use strict;
 use warnings;
 
-use base qw(Exporter);
-
 =head1 NAME
 
 RT::Shredder::Constants -  RT::Shredder constants that is used to mark state of RT objects.
@@ -128,17 +126,5 @@ use constant {
     VALID     => 0x040,
     INVALID   => 0x080,
 };
-
-our @EXPORT = qw(
-        DEPENDS_ON
-        WIPE_AFTER
-        RELATES
-        VARIABLE
-        ON_STACK
-        IN_WIPING
-        WIPED
-        VALID
-        INVALID
-        );
 
 1;
