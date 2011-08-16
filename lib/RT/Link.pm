@@ -78,7 +78,7 @@ use base 'RT::Record';
 sub Table {'Links'}
 use Carp;
 use RT::URI;
-
+use RT::Shredder::Constants;
 
 
 =head2 Create PARAMHASH
@@ -444,7 +444,79 @@ sub _CoreAccessible {
 		{read => 1, auto => 1, sql_type => 11, length => 0,  is_blob => 0,  is_numeric => 0,  type => 'datetime', default => ''},
 
  }
-};
+}
+
+sub __DependsOn {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# AddLink transactions
+    my $map = RT::Ticket->LINKTYPEMAP;
+    my $link_meta = $map->{ $self->Type };
+    unless ( $link_meta && $link_meta->{'Mode'} && $link_meta->{'Type'} ) {
+        RT::Shredder::Exception->throw( 'Wrong link link_meta, no record for '. $self->Type );
+    }
+    if ( $self->BaseURI->IsLocal ) {
+        my $objs = $self->BaseObj->Transactions;
+        $objs->Limit(
+            FIELD    => 'Type',
+            OPERATOR => '=',
+            VALUE    => 'AddLink',
+        );
+        $objs->Limit( FIELD => 'NewValue', VALUE => $self->Target );
+        while ( my ($k, $v) = each %$map ) {
+            next unless $v->{'Type'} eq $link_meta->{'Type'};
+            next unless $v->{'Mode'} eq $link_meta->{'Mode'};
+            $objs->Limit( FIELD => 'Field', VALUE => $k );
+        }
+        push( @$list, $objs );
+    }
+
+    my %reverse = ( Base => 'Target', Target => 'Base' );
+    if ( $self->TargetURI->IsLocal ) {
+        my $objs = $self->TargetObj->Transactions;
+        $objs->Limit(
+            FIELD    => 'Type',
+            OPERATOR => '=',
+            VALUE    => 'AddLink',
+        );
+        $objs->Limit( FIELD => 'NewValue', VALUE => $self->Base );
+        while ( my ($k, $v) = each %$map ) {
+            next unless $v->{'Type'} eq $link_meta->{'Type'};
+            next unless $v->{'Mode'} eq $reverse{ $link_meta->{'Mode'} };
+            $objs->Limit( FIELD => 'Field', VALUE => $k );
+        }
+        push( @$list, $objs );
+    }
+
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::DEPENDS_ON|RT::Shredder::Constants::WIPE_AFTER,
+        TargetObjects => $list,
+        Shredder => $args{'Shredder'}
+    );
+    return $self->SUPER::__DependsOn( %args );
+}
+
+sub __Relates {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+# FIXME: if link is local then object should exist
+
+    return $self->SUPER::__Relates( %args );
+}
 
 RT::Base->_ImportOverlays();
 

@@ -749,7 +749,61 @@ sub _CoreAccessible {
 		{read => 1, write => 1, sql_type => 5, length => 6,  is_blob => 0,  is_numeric => 1,  type => 'smallint(6)', default => '0'},
 
  }
-};
+}
+
+sub __DependsOn {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+    return $self->SUPER::__DependsOn( %args );
+}
+
+sub __Relates {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# Ticket
+    my $obj = $self->TicketObj;
+    if( defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related Ticket #". $self->id ." object";
+    }
+
+# Custom Field
+    $obj = $self->CustomFieldObj;
+    if( defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related CustomField #". $self->id ." object";
+    }
+
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::RELATES,
+        TargetObjects => $list,
+        Shredder => $args{'Shredder'}
+    );
+    return $self->SUPER::__Relates( %args );
+}
 
 RT::Base->_ImportOverlays();
 

@@ -73,6 +73,7 @@ use RT::User;
 use RT::Transactions;
 use RT::Attributes;
 use RT::Shredder::Constants;
+use RT::Shredder::Dependencies;
 use RT::Shredder::Exceptions;
 use Encode qw();
 

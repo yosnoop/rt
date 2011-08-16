@@ -1044,7 +1044,82 @@ sub _CoreAccessible {
 		{read => 1, auto => 1, sql_type => 11, length => 0,  is_blob => 0,  is_numeric => 0,  type => 'datetime', default => ''},
 
  }
-};
+}
+
+sub __DependsOn {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# Nested attachments
+    my $objs = RT::Attachments->new( $self->CurrentUser );
+    $objs->Limit(
+        FIELD => 'Parent',
+        OPERATOR        => '=',
+        VALUE           => $self->Id
+    );
+    $objs->Limit(
+        FIELD => 'id',
+        OPERATOR        => '!=',
+        VALUE           => $self->Id
+    );
+    push( @$list, $objs );
+
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::DEPENDS_ON,
+        TargetObjects => $list,
+        Shredder => $args{'Shredder'}
+    );
+    return $self->SUPER::__DependsOn( %args );
+}
+
+sub __Relates {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# Parent, nested parts
+    if( $self->Parent ) {
+        if( $self->ParentObj && $self->ParentId ) {
+            push( @$list, $self->ParentObj );
+        } else {
+            my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+            $self = $rec->{'Object'};
+            $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+            $rec->{'Description'} = "Have no parent attachment #". $self->Parent ." object";
+        }
+    }
+
+# Transaction
+    my $obj = $self->TransactionObj;
+    if( defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related transaction #". $self->TransactionId ." object";
+    }
+
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::RELATES,
+        TargetObjects => $list,
+        Shredder => $args{'Shredder'}
+    );
+    return $self->SUPER::__Relates( %args );
+}
 
 RT::Base->_ImportOverlays();
 

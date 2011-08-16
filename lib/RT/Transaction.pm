@@ -1606,7 +1606,60 @@ sub _CoreAccessible {
 		{read => 1, auto => 1, sql_type => 11, length => 0,  is_blob => 0,  is_numeric => 0,  type => 'datetime', default => ''},
 
  }
-};
+}
+
+sub __DependsOn {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# Attachments
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::DEPENDS_ON,
+        TargetObjects => $self->Attachments,
+        Shredder => $args{'Shredder'}
+    );
+
+    return $self->SUPER::__DependsOn( %args );
+}
+
+sub __Relates {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# Ticket
+    my $obj = $self->TicketObj;
+    if( $obj && defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related Ticket #". $self->id ." object";
+    }
+
+# TODO: Users(Creator, LastUpdatedBy)
+
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::RELATES,
+        TargetObjects => $list,
+        Shredder => $args{'Shredder'}
+    );
+    return $self->SUPER::__Relates( %args );
+}
 
 RT::Base->_ImportOverlays();
 

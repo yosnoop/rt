@@ -992,7 +992,75 @@ sub _CoreAccessible {
 		{read => 1, auto => 1, sql_type => 11, length => 0,  is_blob => 0,  is_numeric => 0,  type => 'datetime', default => ''},
 
  }
-};
+}
+
+sub __DependsOn {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# No dependencies that should be deleted with record
+# Scrip actions and conditions should be exported in feature with it.
+
+    return $self->SUPER::__DependsOn( %args );
+}
+
+sub __Relates {
+    my $self = shift;
+    my %args = (
+        Shredder => undef,
+        Dependencies => undef,
+        @_,
+    );
+    my $deps = $args{'Dependencies'};
+    my $list = [];
+
+# Queue
+    my $obj = $self->QueueObj;
+    if( defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related Queue #". $self->id ." object";
+    }
+
+# Condition
+    $obj = $self->ConditionObj;
+    if( defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related ScripCondition #". $self->id ." object";
+    }
+# Action
+    $obj = $self->ActionObj;
+    if( defined $obj->id ) {
+        push( @$list, $obj );
+    } else {
+        my $rec = $args{'Shredder'}->GetRecord( Object => $self );
+        $self = $rec->{'Object'};
+        $rec->{'State'} |= RT::Shredder::Constants::INVALID;
+        $rec->{'Description'} = "Have no related ScripAction #". $self->id ." object";
+    }
+
+    $deps->_PushDependencies(
+        BaseObject => $self,
+        Flags => RT::Shredder::Constants::RELATES,
+        TargetObjects => $list,
+        Shredder => $args{'Shredder'}
+    );
+
+    return $self->SUPER::__Relates( %args );
+}
 
 RT::Base->_ImportOverlays();
 
