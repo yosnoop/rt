@@ -751,19 +751,6 @@ sub _CoreAccessible {
  }
 }
 
-sub __DependsOn {
-    my $self = shift;
-    my %args = (
-        Shredder => undef,
-        Dependencies => undef,
-        @_,
-    );
-    my $deps = $args{'Dependencies'};
-    my $list = [];
-
-    return $self->SUPER::__DependsOn( %args );
-}
-
 sub __Relates {
     my $self = shift;
     my %args = (

@@ -994,22 +994,6 @@ sub _CoreAccessible {
  }
 }
 
-sub __DependsOn {
-    my $self = shift;
-    my %args = (
-        Shredder => undef,
-        Dependencies => undef,
-        @_,
-    );
-    my $deps = $args{'Dependencies'};
-    my $list = [];
-
-# No dependencies that should be deleted with record
-# Scrip actions and conditions should be exported in feature with it.
-
-    return $self->SUPER::__DependsOn( %args );
-}
-
 sub __Relates {
     my $self = shift;
     my %args = (

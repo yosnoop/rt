@@ -504,19 +504,7 @@ sub __DependsOn {
     return $self->SUPER::__DependsOn( %args );
 }
 
-sub __Relates {
-    my $self = shift;
-    my %args = (
-        Shredder => undef,
-        Dependencies => undef,
-        @_,
-    );
-    my $deps = $args{'Dependencies'};
-    my $list = [];
-# FIXME: if link is local then object should exist
-
-    return $self->SUPER::__Relates( %args );
-}
+# FIXME: __Relates should check if link is local and that object exists
 
 RT::Base->_ImportOverlays();
 
