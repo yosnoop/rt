@@ -210,8 +210,6 @@ BEGIN {
 
     require RT;
 
-    require RT::Shredder::Record;
-
     require RT::Shredder::ACE;
     require RT::Shredder::Attachment;
     require RT::Shredder::CachedGroupMember;
