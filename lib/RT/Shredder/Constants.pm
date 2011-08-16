@@ -93,10 +93,10 @@ exist.
 =cut
 
 use constant {
-    DEPENDS_ON    => 0x000001,
-    WIPE_AFTER    => 0x000010,
-    RELATES        => 0x000100,
-    VARIABLE    => 0x001000,
+    DEPENDS_ON => 0x01,
+    WIPE_AFTER => 0x02,
+    RELATES    => 0x04,
+    VARIABLE   => 0x08,
 };
 
 =head1 STATES
@@ -122,11 +122,11 @@ are valid.
 =cut
 
 use constant {
-    ON_STACK    => 0x00000,
-    IN_WIPING    => 0x00001,
-    WIPED        => 0x00010,
-    VALID        => 0x00100,
-    INVALID        => 0x01000,
+    ON_STACK  => 0x00,
+    IN_WIPING => 0x01,
+    WIPED     => 0x02,
+    VALID     => 0x04,
+    INVALID   => 0x08,
 };
 
 our @EXPORT = qw(
