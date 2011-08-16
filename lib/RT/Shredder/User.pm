@@ -58,20 +58,26 @@ use RT::Shredder::Exceptions;
 use RT::Shredder::Dependencies;
 
 my @OBJECTS = qw(
+    ACL
+    Articles
     Attachments
+    Attributes
     CachedGroupMembers
-    CustomFields
+    Classes
     CustomFieldValues
+    CustomFields
     GroupMembers
     Groups
     Links
+    ObjectClasses
+    ObjectCustomFieldValues
+    ObjectCustomFields
     Principals
     Queues
     ScripActions
     ScripConditions
     Scrips
     Templates
-    ObjectCustomFieldValues
     Tickets
     Transactions
     Users
