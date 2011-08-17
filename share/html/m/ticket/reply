@@ -74,7 +74,7 @@
 <& /Elements/EditTimeValue,
     Name => 'UpdateTimeWorked',
     Default => $ARGS{UpdateTimeWorked}||'',
-    InUnits => $ARGS{'UpdateTimeWorked-TimeUnits'}||'minutes',
+    InputUnits => $ARGS{'UpdateTimeWorked-TimeUnits'}||'minutes',
 &>
 </span></div>
 <input type="hidden" class="hidden" name="id" value="<%$t->Id%>" /><br />
