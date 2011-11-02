@@ -46,20 +46,22 @@
 %#
 %# END BPS TAGGED BLOCK }}}
 <input name="<% $ValueName %>" value="<% $Default || '' %>" size="5" />
-<& /Elements/SelectTimeUnits, Name => $UnitName, InputUnits => $InputUnits &>
+<& /Elements/SelectTimeUnits, Name => $UnitName, Default => $show_units &>
 <%ARGS>
 $Default    => ''
 $Name       => ''
 $ValueName  => ''
-$UnitName   => ''
-$InputUnits => 'minutes'
 </%ARGS>
 <%INIT>
-$ValueName ||= $Name;
-$UnitName  ||= ($Name||$ValueName) . '-TimeUnits';
+$ValueName  ||= $Name;
+my $UnitName  = $ValueName . '-TimeUnits';
 
-if ($InputUnits eq 'minutes' && RT->Config->Get('DefaultTimeUnitsToHours', $session{'CurrentUser'})) {
-    $Default = sprintf '%.3f', $Default / 60
-        unless $Default eq '';
+my $show_units = $m->request_args->{ $UnitName };
+$show_units ||= RT->Config->Get('DefaultTimeUnitsToHours', $session{'CurrentUser'});
+$show_units ||= 'minutes';
+
+if ( $Default && $show_units eq 'hours' ) {
+    $Default = sprintf '%.3f', $Default / 60;
+    $Default =~ s/\.000$//;
 }
 </%INIT>

@@ -45,20 +45,18 @@
 %# those contributions and any derivatives thereof.
 %#
 %# END BPS TAGGED BLOCK }}}
-% my $unit_selected = $HoursDefault ? 'hours' : $InputUnits;
 <select class="TimeUnits" id="<% $Name %>" name="<% $Name %>">
-<option value="minutes" <% $unit_selected eq 'hours' ? '' : 'selected="selected"' |n%>>
+<option value="minutes" <% $Default eq 'minutes' ? '' : 'selected="selected"' |n%>>
     <% loc('Minutes') %>
 </option>
-<option value="hours"   <% $unit_selected eq 'hours' ? 'selected="selected"' : '' |n%>>
+<option value="hours"   <% $Default eq 'hours'   ? 'selected="selected"' : '' |n%>>
     <% loc('Hours') %>
 </option>
 </select>
 <%INIT>
 $Name .= '-TimeUnits' unless $Name =~ /-TimeUnits$/io;
-my $HoursDefault = RT->Config->Get('DefaultTimeUnitsToHours', $session{'CurrentUser'});
 </%INIT>
 <%ARGS>
 $Name => ''
-$InputUnits => 'minutes'
+$Default => 'minutes'
 </%ARGS>

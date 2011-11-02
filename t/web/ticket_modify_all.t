@@ -30,6 +30,7 @@ $m->content_contains("this is update content", 'updated content in display page'
 for (qw/Estimated Worked Left/) {
     $m->goto_create_ticket(1);
     $m->form_name('TicketCreate');
+    $m->field("Time${_}" => "1");
     $m->select("Time${_}-TimeUnits" => 'hours');
     $m->click('AddMoreAttach');
     $m->form_name('TicketCreate');
