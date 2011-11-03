@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use RT::Test tests => 17;
+use RT::Test tests => 47;
 
 my $ticket = RT::Test->create_ticket(
     Subject => 'test ticket basics',
@@ -62,3 +62,23 @@ $m->click('SubmitTicket');
 
 $m->form_name('TicketCreate');
 is($m->value("TimeWorked-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
+
+
+# Test for time unit preservation in Jumbo
+for my $try (@form_tries) {
+    my $jumbo_ticket = RT::Test->create_ticket(
+        Subject => 'test jumbo ticket basics',
+        Queue   => 1,
+    );
+
+    $m->get_ok( $url . "/Ticket/ModifyAll.html?id=" . $jumbo_ticket->id );
+
+    for my $field (keys %$try) {
+        $m->form_name('ModifyTicket');
+        $m->field("${field}" => "1");
+        $m->select("${field}-TimeUnits" => 'hours');
+        $m->click('AddMoreAttach');
+        $m->form_name('ModifyTicket');
+        is($m->value("${field}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
+    }
+}
