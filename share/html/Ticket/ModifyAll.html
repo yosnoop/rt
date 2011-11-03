@@ -56,7 +56,12 @@
 <input type="hidden" class="hidden" name="id" value="<%$Ticket->Id%>" />
 
 <&| /Widgets/TitleBox, title => loc('Modify ticket # [_1]', $Ticket->Id), class=>'ticket-info-basics' &>
-<& Elements/EditBasics, TicketObj => $Ticket &>
+% my @preserve_fields = qw(
+%     TimeWorked TimeEstimated TimeLeft
+% );
+<& Elements/EditBasics,
+    TicketObj => $Ticket,
+    defaults => { map { $_ => $ARGS{$_} } @preserve_fields } &>
 <& Elements/EditCustomFields, TicketObj => $Ticket &>
 </&>
 

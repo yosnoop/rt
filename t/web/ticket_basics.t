@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use RT::Test tests => 47;
+use RT::Test tests => 59;
 
 my $ticket = RT::Test->create_ticket(
     Subject => 'test ticket basics',
@@ -30,6 +30,11 @@ for my $try (@form_tries) {
         $m->click('AddMoreAttach');
         $m->form_name('TicketCreate');
         is($m->value("${field}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
+        is(
+            $m->value($field),
+            defined($try->{$field}) ? $try->{$field} : '',
+            'time value is the same after the form was submitted'
+        );
     }
 }
 
@@ -75,10 +80,15 @@ for my $try (@form_tries) {
 
     for my $field (keys %$try) {
         $m->form_name('ModifyTicket');
-        $m->field("${field}" => "1");
+        $m->field($field => $try->{$field}) if defined $try->{$field};
         $m->select("${field}-TimeUnits" => 'hours');
         $m->click('AddMoreAttach');
         $m->form_name('ModifyTicket');
         is($m->value("${field}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
+        is(
+            $m->value($field),
+            defined($try->{$field}) ? $try->{$field} : '',
+            'time value is the same after the form was submitted'
+        );
     }
 }
