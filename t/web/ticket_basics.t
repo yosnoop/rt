@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use RT::Test tests => 59;
+use RT::Test tests => 77;
 
 my $ticket = RT::Test->create_ticket(
     Subject => 'test ticket basics',
@@ -11,39 +11,50 @@ my $ticket = RT::Test->create_ticket(
 my ( $url, $m ) = RT::Test->started_ok;
 ok( $m->login, 'logged in' );
 
+my $change_to_owner = do {
+    $m->get( $url . "/Ticket/ModifyAll.html?id=" . $ticket->id );
+    my $form = $m->form_name('ModifyTicket');
+    my @values = $form->find_input('Owner')->possible_values;
+    $values[-1];
+};
 # Failing test where the time units are not preserved when you
 # click 'Add more files' on Display
 my @form_tries = (
-    {TimeEstimated => undef},
-    {TimeEstimated => "1"},
-    {TimeWorked    => undef},
-    {TimeWorked    => "1"},
-    {TimeLeft      => undef},
-    {TimeLeft      => "1"},
+    {Subject => "hello rt"},
+    {Status  => "open"},
+    {Owner   => $change_to_owner},
+
+    (
+        map +{
+            "Time$_"           => undef,
+            "Time$_-TimeUnits" => 'hours',
+        }, qw/Estimated Worked Left/
+    ),
+    (
+        map +{
+            "Time$_"           => '1',
+            "Time$_-TimeUnits" => 'hours',
+        }, qw/Estimated Worked Left/
+    ),
+
+    {InitialPriority      => "10"},
+    {FinalPriority => "10"},
 );
+
 for my $try (@form_tries) {
     $m->goto_create_ticket(1);
     $m->form_name('TicketCreate');
+    $m->set_fields(%$try);
+    $m->click('AddMoreAttach');
+    $m->form_name('TicketCreate');
     for my $field (keys %$try) {
-        $m->select("${field}-TimeUnits" => 'hours');
-        $m->field($field => $try->{$field}) if defined $try->{$field};
-        $m->click('AddMoreAttach');
-        $m->form_name('TicketCreate');
-        is($m->value("${field}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
         is(
             $m->value($field),
             defined($try->{$field}) ? $try->{$field} : '',
-            'time value is the same after the form was submitted'
+            "field $field is the same after the form was submitted"
         );
     }
 }
-
-$m->goto_update_ticket(ticket => $ticket, action => 'Respond');
-$m->form_name('TicketUpdate');
-$m->select("UpdateTimeWorked-TimeUnits" => 'hours');
-$m->click('AddMoreAttach');
-$m->form_name('TicketUpdate');
-is($m->value("UpdateTimeWorked-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
 
 my $cf = RT::Test->load_or_create_custom_field(
     Name       => 'CF1',
@@ -76,19 +87,20 @@ for my $try (@form_tries) {
         Queue   => 1,
     );
 
-    $m->get_ok( $url . "/Ticket/ModifyAll.html?id=" . $jumbo_ticket->id );
+    local($try->{Priority}) = delete local($try->{InitialPriority})
+        if exists $try->{InitialPriority};
 
+    $m->get( $url . "/Ticket/ModifyAll.html?id=" . $jumbo_ticket->id );
+    $m->form_name('ModifyTicket');
+    $m->set_fields(%$try);
+    $m->click('AddMoreAttach');
+    $m->form_name('ModifyTicket');
     for my $field (keys %$try) {
-        $m->form_name('ModifyTicket');
-        $m->field($field => $try->{$field}) if defined $try->{$field};
-        $m->select("${field}-TimeUnits" => 'hours');
-        $m->click('AddMoreAttach');
-        $m->form_name('ModifyTicket');
-        is($m->value("${field}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
         is(
             $m->value($field),
             defined($try->{$field}) ? $try->{$field} : '',
-            'time value is the same after the form was submitted'
+            "field $field is the same after the Jumbo form was submitted"
         );
     }
 }
+

@@ -57,7 +57,9 @@
 
 <&| /Widgets/TitleBox, title => loc('Modify ticket # [_1]', $Ticket->Id), class=>'ticket-info-basics' &>
 % my @preserve_fields = qw(
+%     Status Subject Owner
 %     TimeWorked TimeEstimated TimeLeft
+%     Priority FinalPriority
 % );
 <& Elements/EditBasics,
     TicketObj => $Ticket,
@@ -187,7 +189,7 @@ unless (keys %{$session{'Attachments'}} and $ARGS{'UpdateAttach'}) {
 $m->callback( TicketObj => $Ticket, ARGSRef => \%ARGS );
 my @results;
 
-unless ($OnlySearchForPeople or $OnlySearchForGroup or $ARGS{'AddMoreAttach'} ) {
+unless ($OnlySearchForPeople or $OnlySearchForGroup ) {
     # There might be two owners. 
     if ( ref ($ARGS{'Owner'} )) {
         my @owners =@{$ARGS{'Owner'}};
@@ -198,18 +200,20 @@ unless ($OnlySearchForPeople or $OnlySearchForGroup or $ARGS{'AddMoreAttach'} ) 
 
     }
 
-    push @results, ProcessTicketWatchers( TicketObj => $Ticket, ARGSRef => \%ARGS);
-    push @results, ProcessObjectCustomFieldUpdates( Object => $Ticket, ARGSRef => \%ARGS);
-    push @results, ProcessTicketDates( TicketObj => $Ticket, ARGSRef => \%ARGS);
-    
-    # Add session attachments if any to be processed by ProcessUpdateMessage
-    $ARGS{'UpdateAttachments'} = $session{'Attachments'} if ( $session{'Attachments'} );
-    push @results, ProcessUpdateMessage( TicketObj => $Ticket, ARGSRef=>\%ARGS );
-    # Cleanup WebUI
-    delete $session{'Attachments'};
+    unless ( $ARGS{'AddMoreAttach'} ) {
+        push @results, ProcessTicketWatchers( TicketObj => $Ticket, ARGSRef => \%ARGS);
+        push @results, ProcessObjectCustomFieldUpdates( Object => $Ticket, ARGSRef => \%ARGS);
+        push @results, ProcessTicketDates( TicketObj => $Ticket, ARGSRef => \%ARGS);
+        
+        # Add session attachments if any to be processed by ProcessUpdateMessage
+        $ARGS{'UpdateAttachments'} = $session{'Attachments'} if ( $session{'Attachments'} );
+        push @results, ProcessUpdateMessage( TicketObj => $Ticket, ARGSRef=>\%ARGS );
+        # Cleanup WebUI
+        delete $session{'Attachments'};
 
-    push @results, ProcessTicketBasics( TicketObj => $Ticket, ARGSRef => \%ARGS );
-    push @results, ProcessTicketLinks( TicketObj => $Ticket, ARGSRef => \%ARGS);
+        push @results, ProcessTicketBasics( TicketObj => $Ticket, ARGSRef => \%ARGS );
+        push @results, ProcessTicketLinks( TicketObj => $Ticket, ARGSRef => \%ARGS);
+    }
 }
 
 $Ticket->ApplyTransactionBatch;
