@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use RT::Test tests => 14;
+use RT::Test tests => 17;
 
 my $ticket = RT::Test->create_ticket(
     Subject => 'test ticket basics',
@@ -13,14 +13,24 @@ ok( $m->login, 'logged in' );
 
 # Failing test where the time units are not preserved when you
 # click 'Add more files' on Display
-for (qw/Estimated Worked Left/) {
+my @form_tries = (
+    {TimeEstimated => undef},
+    {TimeEstimated => "1"},
+    {TimeWorked    => undef},
+    {TimeWorked    => "1"},
+    {TimeLeft      => undef},
+    {TimeLeft      => "1"},
+);
+for my $try (@form_tries) {
     $m->goto_create_ticket(1);
     $m->form_name('TicketCreate');
-    $m->field("Time${_}" => "1");
-    $m->select("Time${_}-TimeUnits" => 'hours');
-    $m->click('AddMoreAttach');
-    $m->form_name('TicketCreate');
-    is($m->value("Time${_}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
+    for my $field (keys %$try) {
+        $m->select("${field}-TimeUnits" => 'hours');
+        $m->field($field => $try->{$field}) if defined $try->{$field};
+        $m->click('AddMoreAttach');
+        $m->form_name('TicketCreate');
+        is($m->value("${field}-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
+    }
 }
 
 $m->goto_update_ticket(ticket => $ticket, action => 'Respond');
