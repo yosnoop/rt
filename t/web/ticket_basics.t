@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use RT::Test tests => 77;
+use RT::Test tests => 93;
 
 my $ticket = RT::Test->create_ticket(
     Subject => 'test ticket basics',
@@ -56,30 +56,6 @@ for my $try (@form_tries) {
     }
 }
 
-my $cf = RT::Test->load_or_create_custom_field(
-    Name       => 'CF1',
-    Type       => 'Freeform',
-    Pattern    => '.', # mandatory
-    Queue      => 'General',
-);
-
-# More time unit testing by a failing CF validation
-$m->get_ok($url.'/Admin/CustomFields/Objects.html?id='.$cf->id);
-$m->form_name('CustomFieldAppliesTo');
-$m->tick('AddCustomField-'.$cf->id => '0'); # Make CF global
-$m->click('UpdateObjs');
-$m->text_contains('Object created', 'CF applied globally');
-
-$m->goto_create_ticket(1);
-
-$m->form_name('TicketCreate');
-$m->field('TimeWorked-TimeUnits' => 'hours');
-$m->click('SubmitTicket');
-
-$m->form_name('TicketCreate');
-is($m->value("TimeWorked-TimeUnits"), 'hours', 'time units stayed to "hours" after the form was submitted');
-
-
 # Test for time unit preservation in Jumbo
 for my $try (@form_tries) {
     my $jumbo_ticket = RT::Test->create_ticket(
@@ -104,3 +80,32 @@ for my $try (@form_tries) {
     }
 }
 
+my $cf = RT::Test->load_or_create_custom_field(
+    Name       => 'CF1',
+    Type       => 'Freeform',
+    Pattern    => '.', # mandatory
+    Queue      => 'General',
+);
+
+# More time unit testing by a failing CF validation
+$m->get_ok($url.'/Admin/CustomFields/Objects.html?id='.$cf->id);
+$m->form_name('CustomFieldAppliesTo');
+$m->tick('AddCustomField-'.$cf->id => '0'); # Make CF global
+$m->click('UpdateObjs');
+$m->text_contains('Object created', 'CF applied globally');
+
+# Test for preservation when a ticket is submitted and CF validation fails
+for my $try (@form_tries) {
+    $m->goto_create_ticket(1);
+    $m->form_name('TicketCreate');
+    $m->set_fields(%$try);
+    $m->click('SubmitTicket');
+    $m->form_name('TicketCreate');
+    for my $field (keys %$try) {
+        is(
+            $m->value($field),
+            defined($try->{$field}) ? $try->{$field} : '',
+            "field $field is the same after the form was submitted"
+        );
+    }
+}
