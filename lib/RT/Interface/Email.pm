@@ -1052,11 +1052,14 @@ sub ParseCcAddressesFromHead {
     my $current_address = lc $args{'CurrentUser'}->EmailAddress;
     my $user = $args{'CurrentUser'}->UserObj;
 
+    my $sender = ParseSenderAddressFromHead( $args{'Head'} );
+
     return
         grep $_ ne $current_address && !RT::EmailParser->IsRTAddress( $_ ),
         map lc $user->CanonicalizeEmailAddress( $_->address ),
-        map Email::Address->parse( $args{'Head'}->get( $_ ) ),
-        qw(To Cc);
+        ( map Email::Address->parse( $args{'Head'}->get( $_ ) ), qw(To Cc) ),
+        @{ $sender || [] }
+    ;
 }
 
 
