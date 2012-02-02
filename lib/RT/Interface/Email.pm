@@ -1072,14 +1072,9 @@ sub ParseSenderAddressFromHead {
     my $head = shift;
 
     #Figure out who's sending this message.
-    foreach my $header ('Reply-To', 'From', 'Sender') {
-        my $addr_line = $head->get($header) || next;
-        my ($addr, $name) = ParseAddressFromHeader( $addr_line );
-        # only return if the address is not empty
-        return ($addr, $name) if $addr;
-    }
-
-    return (undef, undef);
+    return ParseFirstNotEmptyAddressHeaderFromHead(
+        $head, 'Reply-To', 'From', 'Sender',
+    );
 }
 
 =head2 ParseErrorsToAddressFromHead HEAD
@@ -1093,21 +1088,25 @@ From:, Sender)
 sub ParseErrorsToAddressFromHead {
     my $head = shift;
 
-    #Figure out who's sending this message.
-
-    foreach my $header ( 'Errors-To', 'Reply-To', 'From', 'Sender' ) {
-
-        # If there's a header of that name
-        my $headerobj = $head->get($header);
-        if ($headerobj) {
-            my ( $addr, $name ) = ParseAddressFromHeader($headerobj);
-
-            # If it's got actual useful content...
-            return ($addr) if ($addr);
-        }
-    }
+    # Figure out who's sending this message.
+    my $list = ParseFirstNotEmptyAddressHeaderFromHead(
+        $head, 'Errors-To', 'Reply-To', 'From', 'Sender',
+    ) or return undef;
+    return $list->[0]->address;
 }
 
+sub ParseFirstNotEmptyAddressHeaderFromHead {
+    my ($head, @fields) = @_;
+
+    foreach my $header ( @fields ) {
+        my $addr_line = $head->get($header) || next;
+        my $list = ParseAddressFromHeader( $addr_line ) || next;
+        return $list unless wantarray;
+        return ($list->[0]->address, $list->[0]->phrase);
+    }
+
+    return undef;
+}
 
 
 =head2 ParseAddressFromHeader ADDRESS
@@ -1121,14 +1120,10 @@ sub ParseAddressFromHeader {
 
     # Some broken mailers send:  ""Vincent, Jesse"" <jesse@fsck.com>. Hate
     $Addr =~ s/\"\"(.*?)\"\"/\"$1\"/g;
-    my @Addresses = RT::EmailParser->ParseEmailAddress($Addr);
-
-    my ($AddrObj) = grep ref $_, @Addresses;
-    unless ( $AddrObj ) {
-        return ( undef, undef );
-    }
-
-    return ( $AddrObj->address, $AddrObj->phrase );
+    my @addresses = grep ref $_, RT::EmailParser->ParseEmailAddress($Addr);
+    return undef unless @addresses;
+    return \@addresses unless wantarray;
+    return ($addresses[0]->address, $addresses[0]->phrase);
 }
 
 =head2 DeleteRecipientsFromHead HEAD RECIPIENTS
