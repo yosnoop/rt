@@ -63,6 +63,8 @@ use File::Path qw( rmtree );
 use File::Glob qw( bsd_glob );
 use File::Spec::Unix;
 
+our $SERVER_TIMEZONE;
+
 sub DefaultHandlerArgs  { (
     comp_root            => [
         RT::Interface::Web->ComponentRoots( Names => 1 ),
@@ -200,6 +202,10 @@ sub CleanupRequest {
     File::Temp::cleanup()
             unless $INC{'Test/WWW/Mechanize/PSGI.pm'};
 
+    if ( ($SERVER_TIMEZONE||'') ne ($ENV{'TZ'}||'') ) {
+        $ENV{'TZ'} = $SERVER_TIMEZONE;
+        POSIX::tzset();
+    }
 
 }
 
@@ -245,6 +251,8 @@ sub PSGIApp {
             return $self->_psgi_response_cb($res->finalize,sub { $self->CleanupRequest });
         }
         $env->{PATH_INFO} = $self->_mason_dir_index( $h->interp, $req->path_info);
+
+        $SERVER_TIMEZONE = $ENV{'TZ'};
 
         my $ret;
         {
