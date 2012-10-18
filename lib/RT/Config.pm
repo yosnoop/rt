@@ -777,6 +777,25 @@ lifecycle and add transition rules; see RT_Config.pm for documentation.
 EOT
         },
     },
+    MaxAttachmentSize => {
+        Type          => 'SCALAR',
+        PostLoadCheck => sub {
+            my $self  = shift;
+            my $value = shift || 0;
+            if (
+                $value < 1_024
+                && (   $self->Get('TruncateLongAttachments')
+                    || $self->Get('DropLongAttachments') )
+              )
+            {
+                warn <<EOT;
+MaxAttachmentSize is too small, you may end in endless loop with
+TruncateLongAttachments or DropLongAttachments enabled. You should set it to
+at least 1024(1k).
+EOT
+            }
+        },
+    },
 );
 my %OPTIONS = ();
 
