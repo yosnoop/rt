@@ -212,12 +212,13 @@ sub Create {
 
         if ($id) {
             if ($note_args) {
-                my $ticket = $self->TransactionObj->TicketObj;
-                if ( $ticket && $ticket->isa('RT::Ticket') ) {
-                    $ticket->_RecordNote(%$note_args);
+                my $object = $self->TransactionObj->Object;
+                if ( $object && $object->can('_RecordNote') ) {
+                    $object->_RecordNote(%$note_args);
                 }
                 else {
-                    $RT::Logger->error("only ticket supports RecordNote");
+                    $RT::Logger->error(
+                        ref($object) . " doesn't support _RecordNote" );
                 }
             }
         }
