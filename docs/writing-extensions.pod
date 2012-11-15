@@ -120,7 +120,7 @@ C<t> directory.
 =head2 Patches
 
 If you need to provide patches to RT for any reason, you can put them in
-a C<patches> directory. See L<'Changes to RT'> for more information.
+a C<patches> directory. See L</"Changes to RT"> for more information.
 
 =head1 Callbacks
 
