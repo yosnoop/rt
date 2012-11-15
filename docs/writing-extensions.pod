@@ -1,0 +1,248 @@
+=head1 Introduction
+
+RT has a lot of core features, but sometimes you have a problem to solve
+that's beyond the scope of just configuration. The standard way to add
+features to RT is with an extension. You can see the large number of
+freely available extensions on CPAN under the RT::Extension namespace
+to get an idea what's already out there. We also list some of the more
+useful extensions on the Best Practical website at
+L<http://www.bestpractical.com/rt/extensions.html>
+
+After looking through those, you still may not find what you need, so
+you'll want to write your own extension. Through the years there have
+been different ways to safely and effectively add things onto RT.
+This document describes the current best practice which should allow
+you to add what you need and still be able to safely upgrade RT
+in the future.
+
+=head1 Getting Started
+
+There are a few modules that will set up your initial sandbox for you
+to get you started. Install these modules from CPAN:
+
+=over
+
+=item Module::Install::RTx
+
+Sets up your extension to be installed using Module::Install.
+
+=item Dist::Zilla::MintingProfile::RTx
+
+Provides some tools for managing your distribution. Handy even if you're
+not putting your code on CPAN.
+
+=back
+
+If this is your first time using L<Dist::Zilla>, you can set up your
+CPAN detals by running:
+
+    # dzil setup
+
+You can read about L<Dist::Zilla> and the C<dzil> command at L<http://dzil.org>.
+
+Change to the directory that will be the parent directory for your new
+extension and run the following, replacing Demo with a descriptive name
+for your new extension:
+
+    # dzil new -P RTx RT-Extension-Demo
+
+You'll see something like:
+
+    [DZ] making target dir /some-dir/RT-Extension-Demo
+    [DZ] writing files to /some-dir/RT-Extension-Demo
+    [DZ] dist minted in ./RT-Extension-Demo
+
+If you're stuck on a name, take a look at some of the existing RT extensions.
+You can also ask around the office or on IRC to see what people thinks
+makes sense for what the extension will do.
+
+You'll now have a directory with the basic files for your extension.
+Included is a gitignore file which is handy if you use git for your version
+control like we do. If you don't use git, feel free to delete it, but we hope
+you're using some sort of version control for your work.
+
+=head1 Extension Directories
+
+There are several places to put code to provide your new features
+and if you follow the guidelines below, you'll make sure things
+get installed in the right places when you're ready to use it.
+
+=head2 Module Code
+
+In your new extension directory you'll already have a
+C<lib/RT/Extension/Demo.pm> file, which is just a standard perl module.
+As you start writing code, you can use all of the standard RT libraries
+because your extension will be running in the context of RT and those
+are already pulled in. You can also create more modules under C<lib>
+as needed.
+
+=head2 Mason Code
+
+RT provides callbacks throughout its Mason templates to give you hooks to
+add features. The easiest way to modify RT is to add Mason template files
+that will use these callbacks. See L</Callbacks> for more information.
+Your Mason templates should go in an C<html> directory with the appropriate
+directory structure to make sure the callbacks are executed.
+
+=head2 Creating Objects in RT
+
+If you need to have users create a group, scrip, template, or some other
+object in their RT instance, you can automate this using an C<initialdata>
+file. If you need this, the file should go in the C<etc> directory.
+See also L<docs/initialdata>.
+
+=head2 Module::Install Files
+
+As mentioned above, the RT extension tools are set up to use L<Module::Install>
+to manage the distribution. When you run
+
+    # perl Makefile.PL
+
+for the first time, L<Module::Install> will create an C<inc> directory for all
+of the files it needs. Since you are the author, you should create a
+C<.author> directory (note the . in the directory name) in the C<inc>
+directory. When L<Module::Install> detects this directory, it does things only
+the author needs, like pulling in modules to put in the C<inc> directory.
+Once you have this set up, L<Module::Install> should mostly do the right thing,
+but you can read more about it in the module documentation.
+
+=head2 Tests
+
+You can create tests for your new extension just as with other perl code
+you write. However, unlike typical CPAN modules where users run the tests
+as a step in the installation process, RT users installing extensions don't
+usually run tests. This is because running the tests requires your RT to
+be set up in development mode which involves installing some additional
+modules and having a dev instance. To prevent users from accidentally
+running the tests, we put them in a C<xt> directory rather than the typical
+C<t> directory.
+
+=head2 Patches
+
+If you need to provide patches to RT for any reason, you can put them in
+a C<patches> directory. See L<'Changes to RT'> for more information.
+
+=head1 Callbacks
+
+The RT codebase, mostly the Mason templates, contains hooks called callbacks
+that make it easy to add functionality without changing the RT code itself.
+RT invokes callbacks by looking in the source directories for files that might
+have extra code.
+
+=head2 Directory Structure
+
+RT looks in the following path for callbacks:
+
+    rt_base/local/html/Callbacks/[custom_name]/[rt mason path]/[callback name]
+
+The extension installation process will handle some of this for you by putting
+your html directory under C<local> as part of the installation process.
+You need to make sure the path under C<html> is correct since that is installed
+as-is.
+
+The C<Callbacks> directory is required. The next directory can be named
+anything and is provided to allow RT owners to keep local files organized
+in a way that makes sense to them. In the case of
+an extension, you should name the directory the same as your extension.
+So if your extension is C<RT::Extension::Demo>, you should create a
+C<RT-Extension-Demo> directory under C<Callbacks>.
+
+The rest of the path is determined by the RT Mason code and the callback you
+want to use. You can find callbacks by looking for calls to the C<callback>
+method in the RT Mason code. You can use something like this in your base
+RT directory:
+
+    # find share/html/ | xargs grep '\->callback'
+
+As an example, assume you wanted to modify the ticket update page to put
+something after the Time Worked field. You run the above and see there is
+a callback in C<share/html/Ticket/Update.html> that looks like this:
+
+    $m->callback( %ARGS, CallbackName => 'AfterWorked', Ticket => $TicketObj );
+
+You look at the Update.html file and see that the callback is located
+right after the Time Worked field. To add some code that RT will
+run at that point, you would create the directory:
+
+    html/Callbacks/RT-Extension-Demo/Ticket/Update.html/
+
+Note that Update.html is a file in the RT source, but it becomes a directory
+in your extension code. You then create a file with the name of the
+callback, in this case C<AfterWorked>, and that's where you put your code.
+So the full path and file would be:
+
+    html/Callbacks/RT-Extension-Demo/Ticket/Update.html/AfterWorked
+
+If you see a callback that doesn't have a C<CallbackName> parameter, name
+your file C<Default> and it will get invoked since that is the default
+callback name when one isn't provided.
+
+=head2 Callback Parameters
+
+When you look at callbacks using the method above, the other important
+thing to consider is the parameter list. In addition to the C<CallbackName>,
+the other parameters listed in the callback will be passed to you
+to use as you develop your extension.
+
+Getting these parameters is important because you'll likely need them
+in your code, getting data from the current ticket object, for example.
+These values are also often passed by reference, which allows you to modify
+them, potentially changing the behavior of the RT template when it
+continues executing after evaluating your code.
+
+Some examples are adding a C<Limit> call to modify search results on
+a L<DBIx::SearchBuilder> object, or setting a flag like C<$skip_update>
+for a callback like this:
+
+    $m->callback( CallbackName => 'BeforeUpdate', ARGSRef => \%ARGS, skip_update => \$skip_update,
+              checks_failure => $checks_failure, results => \@results, TicketObj => $TicketObj );
+
+There are many different callbacks in RT and these are just a few examples
+to give you idea what you can do in your callback code. You can also look
+at other extensions for examples of how people use callbacks to modify
+and extend RT.
+
+=head1 Changes to RT
+
+When writing an extension, the goal is to provide all of the new functionality
+in your extension code using standard interfaces into RT. However,
+sometimes when you're working on an extension, you'll find you really need
+a change in RT itself to make your extension work. Often this is something
+like adding a new callback or a method to a core module that would be
+helpful for everyone.
+
+Since any change to RT will only be included in the next version and
+forward, you'll need to provide something for users on current or older
+versions of RT. An easy way to do this is to provide a patch in your
+extension distribution. In general, you should only provide patches
+if you know they will eventually be merged into RT. Otherwise, you
+may have to provide versions of your patches for each release of RT.
+You can read more about getting changes accepted into RT in the
+L<docs/hacking> document.
+
+Create a C<patches> directory in your extension distribution to hold
+your patch files. Name the patch files with the latest verison of RT
+that needs the patch. For example, if the patch is needed for RT 4.0.7,
+name your patch C<4.0.7-some-patch.diff>. That tells users that if they
+are using RT 4.0.7 or earlier, they need to apply the patch. If your
+extension can be used for RT 3.8, you'll likely need to provide different
+patches using the same naming convention.
+
+Also remember to update your install documentation to remind users to apply
+the patch.
+
+=cut
+
+# TODO:
+
+# Add docs about how to set up testing
+
+# Add docs about final distribution steps (make dist, etc.)
+
+# Make sure link to initialdata.pod works
+
+# Add docs about best way to extend email handling with
+# mail plugins
+
+# Add info on creating additional web pages in html, where
+# they are installed, and how to add to the RT menu
