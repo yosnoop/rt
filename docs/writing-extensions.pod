@@ -99,12 +99,12 @@ to manage the distribution. When you run
     # perl Makefile.PL
 
 for the first time, L<Module::Install> will create an C<inc> directory for all
-of the files it needs. Since you are the author, you should create a
-C<.author> directory (note the . in the directory name) in the C<inc>
+of the files it needs. Since you are the author, a C<.author> directory
+(note the . in the directory name) is created for you in the C<inc>
 directory. When L<Module::Install> detects this directory, it does things only
 the author needs, like pulling in modules to put in the C<inc> directory.
-Once you have this set up, L<Module::Install> should mostly do the right thing,
-but you can read more about it in the module documentation.
+Once you have this set up, L<Module::Install> should mostly do the right thing.
+You can find details in the module documentation.
 
 =head2 Tests
 
