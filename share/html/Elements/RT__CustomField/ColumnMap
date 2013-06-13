@@ -68,7 +68,7 @@ my $COLUMN_MAP = {
             title     => $c, attribute => $c,
 	    value     => sub { return $_[0]->$c() },
         } }
-        qw(Name Description Type LookupType Pattern)
+        qw(Name Description Type LookupType Pattern RenderType BasedOn ValuesClass)
     ),
     map(
         { my $c = $_; my $short = $c; $short =~ s/^Friendly//;

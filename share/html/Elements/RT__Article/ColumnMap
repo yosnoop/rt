@@ -55,6 +55,11 @@ $Attr => undef
 my $COLUMN_MAP;
 
 $COLUMN_MAP = {
+    id => {
+        title     => '#', # loc
+        attribute => 'id',
+        value     => sub { return $_[0]->id },
+    },
     Name => {
         attribute => 'Name',
         title     => 'Name',                   # loc
@@ -69,6 +74,16 @@ $COLUMN_MAP = {
         attribute => 'Class',
         title     => 'Class id',                   # loc
         value     => sub { $_[0]->Class },
+    },
+    Parent => {
+        attribute => 'Parent',
+        title     => 'Parent',                   # loc
+        value     => sub { $_[0]->Parent },
+    },
+    URI => {
+        attribute => 'URI',
+        title     => 'URI',                   # loc
+        value     => sub { $_[0]->URI },
     },
     ClassName => {
         attribute => 'Class',

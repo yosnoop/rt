@@ -83,6 +83,21 @@ my $COLUMN_MAP = {
 	attribute => 'Description',
 	value     => sub { return $_[0]->Description() },
     },
+    Domain => {
+        title     => 'Domain', # loc
+        attribute => 'Domain',
+        value     => sub { return $_[0]->Domain() },
+    },
+    Type => {
+        title     => 'Type', # loc
+        attribute => 'Type',
+        value     => sub { return $_[0]->Type() },
+    },
+    Instance => {
+        title     => 'Instance', # loc
+        attribute => 'Instance',
+        value     => sub { return $_[0]->Instance() },
+    },
 };
 
 </%ONCE>
