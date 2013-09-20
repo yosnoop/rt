@@ -84,6 +84,20 @@ that will use these callbacks. See L</Callbacks> for more information.
 Your Mason templates should go in an C<html> directory with the appropriate
 directory structure to make sure the callbacks are executed.
 
+=head2 CSS and Javascript
+
+If you have style sheets or Javascript, create a C<static> directory at the
+top level under your extension, and under that a C<css> directory and a
+C<js> directory. You can put your files in those two directories.
+
+To add files to RT's include paths, you can use the L<RT/AddStyleSheets> and
+L<RT/AddJavascript> methods available in the L<RT> module. You can put the
+lines near the top of your module code (in your "Demo.pm" file). If you set up
+the paths correctly, you should only need to set the file names like this:
+
+    RT->AddStyleSheets('myextension.css');
+    RT->AddJavaScript('myextension.js');
+
 =head2 Creating Objects in RT
 
 If you need to have users create a group, scrip, template, or some other
