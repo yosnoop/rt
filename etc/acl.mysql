@@ -12,7 +12,7 @@ sub acl {
         print STDERR "DatabaseUser is root. Skipping...\n";
         return;
     }
-    print "Granting access to $db_user\@'$db_rthost' on $db_name.\n";
+    print STDERR "Granting access to $db_user\@'$db_rthost' on $db_name.\n";
     $db_name =~ s/([_%])/\\$1/g;
     return (
         "GRANT SELECT,INSERT,CREATE,INDEX,UPDATE,DELETE
