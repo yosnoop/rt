@@ -87,7 +87,7 @@ For a full list of fields, read the documentation for L<RT::User/Create>.
 
 Creates a new L<RT::Group> for each hashref.  In almost all cases you'll want
 to follow the example above to create a group just as if you had done it from
-the admin interface.  B<Do not> omit the C<< Domain => 'UserDefined' >> line.
+the admin interface.
 
 In addition to the C<Members> option shown above, which can take both
 users and groups, the C<MemberOf> field may be a single value or an
