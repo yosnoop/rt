@@ -46,11 +46,13 @@
 %#
 %# END BPS TAGGED BLOCK }}}
 % my $name = $NamePrefix.$CustomField->Id.'-Values';
-<& /Elements/SelectDate, Name => "$name", current => 0 &> (<%$DateObj->AsString%>)
+<& /Elements/SelectDate, Name => "$name", current => 0, $KeepValue && $Default ? (Default => $Default) : () &> (<%$DateObj->AsString%>)
 
 <%INIT>
 my $DateObj = RT::Date->new ( $session{'CurrentUser'} );
 $DateObj->Set( Format => 'ISO', Value => $Default );
+
+$KeepValue = 1 if !defined $KeepValue && $Default && ( $HTML::Mason::Commands::r->path_info =~ m{\/Create.html$} || $DECODED_ARGS->{'Create'} );
 </%INIT>
 <%ARGS>
 $Object => undef
@@ -59,4 +61,5 @@ $NamePrefix => undef
 $Default => undef
 $Values => undef
 $MaxValues => 1
+$KeepValue => undef
 </%ARGS>
